@@ -5,22 +5,23 @@ import {nanoid} from 'nanoid'
 import Button from './Button'
 export default function App(){
   const [data,setData] = React.useState([])
-  const [seanButton, setSeanButton] = React.useState(false)
-  const getDataFromApi = () => { //process to get data from api using axios!
+  const buttonContents = ["Sean Connery", "Roger Moore", "Director"]
+  const [buttonHandler, setButtonHandler] = React.useState(createButtons())
+  const getDataFromApi = () => { //process to get data from aateButtons(pi using axios
     axios.get('https://iznfqs92n3.execute-api.us-west-1.amazonaws.com/dev/api/v2/movies')
     .then(response => {
-      setData(response.data)
+      setData(response.data) //useState is getting the data
 
     }).catch(err =>{
       console.log(err)
     })
 
   }
-  React.useEffect(()=>{
+  React.useEffect(()=>{ // so that this program doesn't run too many times.
     getDataFromApi();
-    
+     
   },[])
-  const movieCard = data.map(obj => {
+  const movieCard = data.map(obj => { // setting up props and card component for the Movie titles 
       return(
         <Card 
           key = {obj.movie_uid} 
@@ -32,16 +33,8 @@ export default function App(){
       )
   })
   
-  var actorMovies = data.map(obj =>{
-    if(obj.bond_actor == "Sean Connery"){
-      return(
-        obj.movie_title
-      )
-    }
-  })
-  //make another component
-  const buttonContents = ["Sean Connery", "Roger Moore", "Director"]
-  const [buttonHandler, setButtonHandler] = React.useState(createButtons())
+  
+  
   function createButtons(){
     const arr = new Array();
     for(var i = 0; i < 3; i ++){
@@ -67,7 +60,7 @@ export default function App(){
     )
   })
   //another function called handle change
-  function handleChange(id){
+  function handleChange(id){ //gets which button is pressed from the button component
     setButtonHandler(prev=>{ //this function updates the state so that the particular button is now clicked
       return prev.map(obj =>{
         return obj.id == id ? {...obj, isClicked : !obj.isClicked} : {...obj, isClicked: false}
@@ -77,16 +70,35 @@ export default function App(){
   }
 
   
-  function displayMoviesWithActor(){
+  function displayMoviesWithActor(){ // goes through the buttonHandler state 
     for(var i = 0; i < 3; i ++){
       if(buttonHandler[i].isClicked){
         if(buttonHandler[i].name == "Director"){
           var arr2 = new Array()
+          var directorArray = new Array() //array to make sure we get one director only once and not multiple times
+
           data.forEach(movieDetail => {
             //if()
-            
-            arr2.push(<div><li className = "listName">{movieDetail.director}</li></div>)
+            if(directorArray.length == 0){
+              directorArray.push(movieDetail.director)
+            }
+            else{
+              var isThere = false
+              for(var i = 0; i < directorArray.length; i ++){
+                if(directorArray[i] == movieDetail.director){
+                  isThere = true
+                }
+              }
+              if(!isThere){
+                directorArray.push(movieDetail.director)
+              }
+            }
+            //by the end of this we should have a director array that is all unique
           })
+          directorArray.forEach(director =>{
+            arr2.push(<div><li className = "listName">{director}</li></div>)
+          })
+          //arr2.push(<div><li className = "listName">{movieDetail.director}</li></div>)
           return arr2
         }
         
@@ -104,14 +116,7 @@ export default function App(){
       }
     }
   }
-  // const list = displayMoviesWithActor()
-  // if(typeof list !== 'undefined'){
-  //   const displayLists = list.map(item =>{
-  //     return(
-  //       <li>{item}</li>
-  //     )
-  //   })  
-  // }
+
   if(typeof displayMoviesWithActor() !== undefined){
     var list = displayMoviesWithActor()
   }
@@ -119,15 +124,14 @@ export default function App(){
     <div className = "main-section">
       <h1 className = "list-intro">James Bond Database</h1>
       {movieCard}
-      {/* <button onClick = {displayMoviesWithActor}>Sean Connery</button>
-      {seanButton && <p className = "movie-list">{actorMovies}<br/></p>} */}
+
       <div className="button-container">{buttons}</div>
       
       {/* {typeof displayLists !== 'undefined' && displayLists} */}
       {buttonHandler[0].isClicked && <h2 className = "list-intro">Here is a list of movies in which Sean Connery was James Bond</h2>}
       {buttonHandler[1].isClicked && <h2 className = "list-intro">Here is a list of movies in which Roger Moore was James Bond</h2>}
       
-      {buttonHandler[2].isClicked && <h2 className = "list-intro">Here is a complete list of directors of the James Bond movies</h2>}
+      {buttonHandler[2].isClicked && <h2 className = "list-intro">Here is a unique list of directors of the James Bond movies</h2>}
 
       {list !== undefined && list}
       
